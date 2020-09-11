@@ -65,13 +65,13 @@ pub struct CandidatePendingAvailability<H, N> {
 pub trait Trait:
 	frame_system::Trait + paras::Trait + configuration::Trait
 {
-	type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
+    type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
 }
 
 decl_storage! {
 	trait Store for Module<T: Trait> as Dispute {
 		/// The vote of the selected validators.
-		ValidatorVote: map hasher(twox_64_concat) ValidatorIndex
+		ValidatorVotes: map hasher(twox_64_concat) ValidatorIndex
 			=> Option<bool>;
 
 		/// The commitments of candidates pending availability, by ParaId.
@@ -86,20 +86,24 @@ decl_storage! {
 	}
 }
 
+// Errors inform users that something went wrong.
 decl_error! {
 	pub enum Error for Module<T: Trait> {
-		/// TODO, seriously
-		SoWrong,
+		/// Error Y.
+		Y,
+		/// Error X.
+		X,
 	}
 }
 
+// only for 3rd party apps, not for internal usage 
 decl_event! {
-	pub enum Event<T> where <T as frame_system::Trait>::Hash {
-        /// An indication of one validator that something is off.
-        DisputeIndicated(CandidateReceipt<Hash>, SessionIndex, T::BlockNumber), // TODO what over checks must there be included? secondary
-		/// A dispute resolved with an outcome.
-		DisputeResolved(CandidateReceipt<Hash>, Hash, HeadData),
-		/// A candidate timed out.
+	pub enum Event<T> where <T as frame_system::Trait>::Hash, <T as frame_system::Trait>::BlockNumber {
+        /// An indication of one validator that something is off. []
+        DisputeIndicated(CandidateReceipt<Hash>, SessionIndex, BlockNumber), // TODO what over checks must there be included? secondary
+		/// A dispute resolved with an outcome. []
+		DisputeResolved(CandidateReceipt<Hash>, SessionIndex, BlockNumber),
+		/// A candidate timed out. []
 		DisputeTimedOut(CandidateReceipt<Hash>, HeadData),
 	}
 }
@@ -109,8 +113,6 @@ decl_module! {
 	pub struct Module<T: Trait>
 		for enum Call where origin: <T as frame_system::Trait>::Origin
 	{
-		type Error = Error<T>;
-
 		fn deposit_event() = default;
 	}
 }
@@ -130,12 +132,114 @@ impl<T: Trait> Module<T> {
 		// unlike most drain methods, drained elements are not cleared on `Drop` of the iterator
 		// and require consumption.
 		for _ in <ValidatorVotes>::drain() { }
-	}
+    }
+    
 
+    fn validators_pro() -> Vec<ValidatorId> {
+        vec![] // TODO
+    }
+
+    fn validators_cons() -> Vec<ValidatorId> {
+        vec![] // TODO
+    }
+
+    /// The set of validators which originally validated that block.
+    fn original_validating_valdiators(session: SessionIndex) -> Vec<ValidatorId> {
+        unimplemented!("");
+    }
+
+    /// Check all of the known votes in storage for that block.
+    /// Returns `true`
+    fn count_pro_and_cons_votes(block: <T as frame_system::Trait>::Hash) -> DisputeVotes {
+        // TODO which votes to we count here?
+        // approval?
+        // backing?
+        // both?
+        DisputeVotes::default() // TODO
+    }
+
+
+    /// Transplant a vote onto all other forks.
+    fn transplant_to(resolution: Resolution, active_heads: Vec<<T as frame_system::Trait>::Hash>) {
+
+    }
+
+    /// Extend the set of blocks to never sync again.
+    fn extend_blacklist(burnt: &[<T as frame_system::Trait>::Hash]) {
+        unimplemented!("Use that other module impl")
+    }
+
+    // block the block number in question
+    //
+    pub(crate) fn process_concluded(
+        block_number: <T as frame_system::Trait>::BlockNumber,
+        block_hash: <T as frame_system::Trait>::Hash,
+        session: SessionIndex) -> Result<(), DispatchError>
+    {
+        // TODO ensure!(..), bounds unclear
+
+        // number of _all_ validators
+        let all_validators = 10u32; // TODO disamibiguate
+        let DisputeVotes { pro, cons } = Self::count_pro_and_cons_votes(block_hash);
+        let thresh = resolution_threshold(all_validators.len()) as u32;
+        let (pro, cons) = (pro >= thresh, cons >= thresh);
+
+        if !(pro ^ cons) {
+            return Err(Error::X)
+        } else if pro && cons {
+            unreachable!("The number of validators was correctly assessed. qed");
+        } else if !pro && !cons {
+            // nothing todo just yet
+            return Ok(())
+        }
+
+        let resolution = if cons {
+            Self::extend_blacklist(&[block_hash]);
+            // slash the other party
+            Resolution {
+                hash: block_hash,
+                to_punish: Self::validators_pro(),
+                was_truely_wrong: true,
+            }
+        } else if pro {
+            // slash the other party
+            Resolution {
+                hash: block_hash,
+                to_punish: Self::validators_cons(),
+                was_truely_wrong: false,
+            }
+        } else {
+            return Err(Error::Y)
+        };
+
+
+        let active_heads = vec![]; // TODO extract from the runtime, is this correct? 
+
+        // 
+        Self::transplant_to(resolution, active_heads);
+
+        // the original validators screwed up too, so slashing is in order
+        let original_offenders = Self::original_validating_valdiators(session);
+
+        Ok(())
+    }
+}
+
+#[derive(Encode, Decode)]
+struct Resolution {
+    hash: Hash, // hash of the storage root / state root this dispute was about
+    was_truely_wrong: bool, // if the originally tagged as bad, was actually bad
+    to_punish: Vec<ValidatorId>, // the validator party to slash
+}
+
+#[derive(Encode, Decode, Default)]
+pub(crate) struct DisputeVotes {
+    pub(crate) pro: u32,
+    pub(crate) cons: u32,
 }
 
 /// Calculate the majority requred to sway in one way or another
-const fn sway_threshold(n_validators: usize) -> usize {
+const fn resolution_threshold(n_validators: usize) -> usize {
 	let mut threshold = (n_validators * 2) / 3;
 	threshold += (n_validators * 2) % 3;
 	threshold
