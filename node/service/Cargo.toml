@@ -54,6 +54,7 @@ pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/parityt
 frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
 codec = { package = "parity-scale-codec", version = "1.3.4" }
 sp-session = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sp-storage = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
 sp-offchain = { package = "sp-offchain", git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
 prometheus-endpoint = { package = "substrate-prometheus-endpoint", git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }

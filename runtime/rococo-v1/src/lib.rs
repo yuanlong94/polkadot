@@ -68,6 +68,7 @@ use runtime_parachains::inclusion as parachains_inclusion;
 use runtime_parachains::inclusion_inherent as parachains_inclusion_inherent;
 use runtime_parachains::initializer as parachains_initializer;
 use runtime_parachains::paras as parachains_paras;
+use runtime_parachains::router as parachains_router;
 use runtime_parachains::scheduler as parachains_scheduler;
 
 pub use pallet_balances::Call as BalancesCall;
@@ -371,6 +372,7 @@ construct_runtime! {
 		Scheduler: parachains_scheduler::{Module, Call, Storage},
 		Paras: parachains_paras::{Module, Call, Storage},
 		Initializer: parachains_initializer::{Module, Call, Storage},
+		Router: parachains_router::{Module, Call, Storage},
 
 		ParasSudoWrapper: paras_sudo_wrapper::{Module, Call},
 	}
@@ -422,7 +424,7 @@ impl frame_system::Trait for Runtime {
 	type MaximumBlockLength = MaximumBlockLength;
 	type AvailableBlockRatio = AvailableBlockRatio;
 	type Version = Version;
-	type ModuleToIndex = ModuleToIndex;
+	type PalletInfo = PalletInfo;
 	type AccountData = pallet_balances::AccountData<Balance>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
@@ -561,6 +563,7 @@ impl pallet_staking::Trait for Runtime {
 
 parameter_types! {
 	pub const ExistentialDeposit: Balance = 1 * CENTS;
+	pub const MaxLocks: u32 = 50;
 }
 
 impl pallet_balances::Trait for Runtime {
@@ -569,6 +572,7 @@ impl pallet_balances::Trait for Runtime {
 	type Event = Event;
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
+	type MaxLocks = MaxLocks;
 	type WeightInfo = ();
 }
 
@@ -594,7 +598,6 @@ impl pallet_offences::Trait for Runtime {
 	type IdentificationTuple = pallet_session::historical::IdentificationTuple<Self>;
 	type OnOffenceHandler = Staking;
 	type WeightSoftLimit = OffencesWeightSoftLimit;
-	type WeightInfo = ();
 }
 
 impl pallet_authority_discovery::Trait for Runtime {}
@@ -664,6 +667,8 @@ impl pallet_babe::Trait for Runtime {
 
 	type HandleEquivocation =
 		pallet_babe::EquivocationHandler<Self::KeyOwnerIdentification, Offences>;
+
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -697,6 +702,8 @@ impl pallet_grandpa::Trait for Runtime {
 	)>>::IdentificationTuple;
 
 	type HandleEquivocation = pallet_grandpa::EquivocationHandler<Self::KeyOwnerIdentification, Offences>;
+
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -718,6 +725,8 @@ impl parachains_inclusion::Trait for Runtime {
 }
 
 impl parachains_paras::Trait for Runtime { }
+
+impl parachains_router::Trait for Runtime { }
 
 impl parachains_inclusion_inherent::Trait for Runtime { }
 
