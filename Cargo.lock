@@ -2568,9 +2568,9 @@ dependencies = [
 
 [[package]]
 name = "jsonrpc-core"
-version = "15.0.0"
+version = "15.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f30b12567a31d48588a65b6cf870081e6ba1d7b2ae353977cb9820d512e69c70"
+checksum = "0745a6379e3edc893c84ec203589790774e4247420033e71a76d3ab4687991fa"
 dependencies = [
  "futures 0.1.29",
  "log 0.4.11",
