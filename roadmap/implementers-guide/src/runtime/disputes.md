@@ -66,6 +66,7 @@ After concluding with enough validtors voting, the dispute will remain open for 
 
 ## Remote Disputes
 
+
 When a dispute has occurred on another fork, we need to transplant that dispute to every other fork. This poses some major challenges.
 
 There are two types of remote disputes. The first is a remote roll-up of a concluded dispute. These are simply all attestations for the block, those against it, and the result of all (secondary) approval checks. A concluded remote dispute can be resolved in a single transaction as it is an open-and-shut case of a quorum of validators disagreeing with another.

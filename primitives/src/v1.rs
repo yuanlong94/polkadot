@@ -376,6 +376,15 @@ impl<H> BackedCandidate<H> {
 	}
 }
 
+
+/// A block that is actively being disputed.
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+pub struct DisputedBlock {
+	/// The block in question.
+	pub hash: Hash,
+}
+
+
 /// Verify the backing of the given candidate.
 ///
 /// Provide a lookup from the index of a validator within the group assigned to this para,
