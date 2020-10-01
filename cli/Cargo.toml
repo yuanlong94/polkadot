@@ -17,30 +17,30 @@ crate-type = ["cdylib", "rlib"]
 log = "0.4.8"
 futures = { version = "0.3.4", features = ["compat"] }
 structopt = "0.3.8"
-sp-api = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-client-db = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-executor = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-tracing = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sp-api = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-client-db = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-executor = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-tracing = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
 service = { package = "polkadot-service", path = "../service", default-features = false, optional = true }
 service-new = { package = "polkadot-service-new", path = "../node/service", default-features = false, optional = true }
 
 tokio = { version = "0.2.13", features = ["rt-threaded"], optional = true }
-frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate", optional = true , branch = "seun-babe-manual-seal" }
-sc-cli = { git = "https://github.com/paritytech/substrate", optional = true , branch = "seun-babe-manual-seal" }
-sc-service = { git = "https://github.com/paritytech/substrate", optional = true , branch = "seun-babe-manual-seal" }
+frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate", optional = true , branch = "kiz-seun-test-runner" }
+sc-cli = { git = "https://github.com/paritytech/substrate", optional = true , branch = "kiz-seun-test-runner" }
+sc-service = { git = "https://github.com/paritytech/substrate", optional = true , branch = "kiz-seun-test-runner" }
 
 wasm-bindgen = { version = "0.2.57", optional = true }
 wasm-bindgen-futures = { version = "0.4.7", optional = true }
-browser-utils = { package = "substrate-browser-utils", git = "https://github.com/paritytech/substrate", optional = true , branch = "seun-babe-manual-seal" }
+browser-utils = { package = "substrate-browser-utils", git = "https://github.com/paritytech/substrate", optional = true , branch = "kiz-seun-test-runner" }
 # this crate is used only to enable `trie-memory-tracker` feature
 # see https://github.com/paritytech/substrate/pull/6745
-sp-trie = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "seun-babe-manual-seal" }
+sp-trie = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "kiz-seun-test-runner" }
 
 [build-dependencies]
-substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
 
 [features]
 default = [ "wasmtime", "db", "cli", "service-old", "trie-memory-tracker" ]

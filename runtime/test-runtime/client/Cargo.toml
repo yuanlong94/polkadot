@@ -16,14 +16,14 @@ polkadot-test-runtime = { path = ".." }
 polkadot-test-service = { path = "../../../node/test-service" }
 
 # Substrate dependencies
-pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-block-builder = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-consensus = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-light = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-service = { git = "https://github.com/paritytech/substrate", features = ["test-helpers"],  default-features = false , branch = "seun-babe-manual-seal" }
-sp-api = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-substrate-test-client = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-block-builder = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-consensus = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-light = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-service = { git = "https://github.com/paritytech/substrate", features = ["test-helpers"],  default-features = false , branch = "kiz-seun-test-runner" }
+sp-api = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+substrate-test-client = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }

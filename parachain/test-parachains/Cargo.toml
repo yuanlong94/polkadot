@@ -14,7 +14,7 @@ adder = { package = "test-parachain-adder", path = "adder" }
 halt = { package = "test-parachain-halt", path = "halt" }
 
 [dev-dependencies]
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
 
 [features]
 default = [ "std" ]

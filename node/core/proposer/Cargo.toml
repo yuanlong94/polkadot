@@ -12,16 +12,16 @@ parity-scale-codec = "1.3.4"
 polkadot-node-subsystem = { path = "../../subsystem" }
 polkadot-overseer = { path = "../../overseer" }
 polkadot-primitives = { path = "../../../primitives" }
-sc-basic-authorship = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-block-builder = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-telemetry = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-api = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-consensus = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-inherents = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sc-basic-authorship = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-block-builder = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-telemetry = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-api = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-consensus = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-inherents = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
 tokio-executor = { version = "0.2.0-alpha.6", features = ["blocking"] }
 wasm-timer = "0.2.4"

@@ -7,21 +7,21 @@ edition = "2018"
 [dependencies]
 jsonrpc-core = "15.1.0"
 polkadot-primitives = { path = "../primitives" }
-sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-api = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-consensus = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sp-consensus-babe = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-rpc = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-consensus-babe = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-consensus-babe-rpc = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-consensus-epochs = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-finality-grandpa = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-finality-grandpa-rpc = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-keystore = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-txpool-api = { package = "sp-transaction-pool", git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-frame-rpc-system = { package = "substrate-frame-rpc-system", git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-api = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-consensus = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sp-consensus-babe = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-rpc = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-consensus-babe = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-consensus-babe-rpc = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-consensus-epochs = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-finality-grandpa = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-finality-grandpa-rpc = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-keystore = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+txpool-api = { package = "sp-transaction-pool", git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+frame-rpc-system = { package = "substrate-frame-rpc-system", git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
 codec = { package = "parity-scale-codec", version = "1.3.4", default-features = false }
-sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }

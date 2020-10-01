@@ -9,6 +9,6 @@ description = "Primitives types for the Node-side"
 polkadot-primitives = { path = "../../../primitives" }
 polkadot-node-primitives = { path = "../../primitives" }
 parity-scale-codec = { version = "1.3.4", default-features = false, features = ["derive"] }
-runtime_primitives = { package = "sp-runtime", git = "https://github.com/paritytech/substrate", default-features = false , branch = "seun-babe-manual-seal" }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
-sc-network = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+runtime_primitives = { package = "sp-runtime", git = "https://github.com/paritytech/substrate", default-features = false , branch = "kiz-seun-test-runner" }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
+sc-network = { git = "https://github.com/paritytech/substrate", branch = "kiz-seun-test-runner" }
