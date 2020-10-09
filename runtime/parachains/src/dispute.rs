@@ -193,8 +193,24 @@ impl<T: Trait> Module<T> {
 	}
 
 
-    // block the block number in question
-    //
+    pub fn local_chain_contains_para_block() -> bool {
+
+    }
+
+
+    /// Process a local dispute.
+    pub(crate) fn process_local_dispute(
+        block_hash: <T as frame_system::Trait>::BlockNumber,
+    ) -> DisputedBlock {
+        // TODO 
+        // ensure_none!(origin);
+        ensure!(Self::local_chain_contains_para_block());
+
+
+    }
+
+    /// block the block number in question
+    ///
     pub(crate) fn process_concluded(
         block_number: <T as frame_system::Trait>::BlockNumber,
         block_hash: <T as frame_system::Trait>::Hash,
@@ -246,6 +262,12 @@ impl<T: Trait> Module<T> {
         let original_offenders = Self::original_validating_valdiators(session);
 
         Ok(())
+    }
+
+
+    /// Process an unconcluded 
+    fn process_unconcluded() {
+        unimplemented!("XXX");
     }
 
     /// Check if we are still within the acceptance period, which is equiv to the
