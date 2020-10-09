@@ -255,8 +255,11 @@ impl ProvisioningJob {
 			ProvisionableData::BackedCandidate(backed_candidate) => {
 				self.backed_candidates.push(backed_candidate)
 			}
-			ProvisionableData::Dispute(disputed_block, _signature) => {
-				self.disputed_blocks.push(DisputedBlock { hash: disputed_block })
+			ProvisionableData::Dispute(disputed_block, signature) => {
+				self.disputed_blocks.push(DisputedBlock { hash: disputed_block, validator: signature })
+			}
+			MisbehaviorReport(hash, report) => {
+				// TODO 
 			}
 			_ => {}
 		}

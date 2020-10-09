@@ -382,6 +382,9 @@ impl<H> BackedCandidate<H> {
 pub struct DisputedBlock {
 	/// The block in question.
 	pub hash: Hash,
+	/// The validator which signed off on the disputed block.
+	/// Required for potential slashing.
+	pub validator: ValidatorSignature,
 }
 
 

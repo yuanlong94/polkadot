@@ -132,9 +132,7 @@ where
 			)).await?;
 
 			receiver.await.map_err(Error::ClosedChannelFromProvisioner)
-		}
-		.fuse();
-		pin_mut!(provision_inherent_data);
+		}.boxed().fuse();
 
 		let mut timeout = wasm_timer::Delay::new(PROPOSE_TIMEOUT).fuse();
 

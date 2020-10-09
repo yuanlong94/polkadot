@@ -113,9 +113,11 @@ decl_module! {
 	pub struct Module<T: Trait>
 		for enum Call where origin: <T as frame_system::Trait>::Origin
 	{
-		fn deposit_event() = default;
+        fn deposit_event() = default;
+
 	}
 }
+
 
 impl<T: Trait> Module<T> {
 
@@ -168,6 +170,28 @@ impl<T: Trait> Module<T> {
     fn extend_blacklist(burnt: &[<T as frame_system::Trait>::Hash]) {
         unimplemented!("Use that other module impl")
     }
+
+
+    /// Do the work for this particular block.
+    fn on_initialize(n: <T as frame_system::Trait>::BlockNumber) -> frame_support::weights::Weight {
+        
+        let events: Vec<EventRecord<<T as frame_system::Trait>::Event, <T as frame_system::Trait>::Hash>> = Events::<T>::events();
+
+        // encoded
+        let data: Vec<u8> = ExtrinsicData::<T>::extrinsic_data(77u32);
+
+        let session = SessionIndex::default();// TODO obtain the relevant session index
+        let offenders = Vec::<OffenceDetails<T::AccountId, pallet_session::historical::IdentificationTuple<T>>>::new();
+        let slash_fraction = Vec::<Perbill>::new();
+        let weight = <T as pallet_staking::Trait>::OnOffenceHandler::on_offence(
+            &offenders,
+            &slash_fraction,
+            &slash_session,
+        ).expect("TODO validate the assumption that this should always work");
+
+        weight
+	}
+
 
     // block the block number in question
     //
@@ -222,6 +246,13 @@ impl<T: Trait> Module<T> {
         let original_offenders = Self::original_validating_valdiators(session);
 
         Ok(())
+    }
+
+    /// Check if we are still within the acceptance period, which is equiv to the
+    /// code from that block being still around
+    // TODO double check
+    fn within_acceptance_period<T: Trait>(para_id: ParaId, block: <T as Trait>::BlockNumber) -> bool {
+        Paras::validation_code_at(para_id, block, None).is_some()
     }
 }
 
