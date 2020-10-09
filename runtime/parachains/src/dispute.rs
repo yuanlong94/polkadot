@@ -21,7 +21,7 @@
 
 use sp_std::prelude::*;
 use primitives::v1::{
-	ValidatorId, CandidateCommitments, CandidateDescriptor, ValidatorIndex, Id as ParaId,
+	ValidatorId, CandidateCommitments, CandidateDescriptor, CandidateReceipt, ValidatorIndex, Id as ParaId,
 	AvailabilityBitfield as AvailabilityBitfield, SignedAvailabilityBitfields, SigningContext,
 	BackedCandidate, CoreIndex, GroupIndex, CommittedCandidateReceipt,
 	CandidateReceipt, HeadData,
@@ -32,36 +32,52 @@ use frame_support::{
 };
 use codec::{Encode, Decode};
 use bitvec::{order::Lsb0 as BitOrderLsb0, vec::BitVec};
-use sp_staking::SessionIndex;
+use pallet_staking::SessionIndex;
+use pallet_session::Trait as Session;
+use pallet_offences::Trait as Offences;
 use sp_runtime::{DispatchError, traits::{One, Saturating}};
 
 use crate::{configuration, paras, scheduler::CoreAssignment};
 
-#[derive(Encode, Decode)]
-#[cfg_attr(test, derive(Debug))]
-pub struct AvailabilityBitfieldRecord<N> {
-	bitfield: AvailabilityBitfield, // one bit per core.
-	submitted_at: N, // for accounting, as meaning of bits may change over time.
+struct DisputeOffence {
+    session: SessionIndex,
+    offenders: Vec<Offender>,
+    validators: Vec<ValidatorId>,
+    when: u128, // FIXME chose a sane time base
 }
 
-/// A backed candidate pending availability.
-// TODO: split this type and change this to hold a plain `CandidateReceipt`.
-// https://github.com/paritytech/polkadot/issues/1357
-#[derive(Encode, Decode, PartialEq)]
-#[cfg_attr(test, derive(Debug))]
-pub struct CandidatePendingAvailability<H, N> {
-	/// The availability core this is assigned to.
-	core: CoreIndex,
-	/// The candidate descriptor.
-	descriptor: CandidateDescriptor<H>,
-	/// The received availability votes. One bit per validator.
-	availability_votes: BitVec<BitOrderLsb0, u8>,
-	/// The block number of the relay-parent of the receipt.
-	relay_parent_number: N,
-	/// The block number of the relay-chain block this was backed in.
-	backed_in_number: N,
+impl<Offender> Offence<Offender> for DisputeOffence {
+    const ID:Kind = b"dispute:notgood";
+
+    type TimeSlot: u128;
+
+    fn offenders(&self) -> Vec<Offender> {
+        self.offenders.clone()
+    }
+
+    fn session_index(&self) -> SessionIndex {
+        self.session
+    }
+
+    fn validator_set_count(&self) -> u32 {
+        self.valdiators.len() as u32
+    }
+
+    fn time_slot(&self) -> Self::TimeSlot {
+        self.when
+    }
+
+    fn slash_fraction(
+        offenders_count: u32,
+        validator_set_count: u32,
+    ) -> Perbill {
+        Perbill(1)
+    }
 }
 
+impl DisputeOffence {
+
+}
 pub trait Trait:
 	frame_system::Trait + paras::Trait + configuration::Trait
 {
@@ -70,29 +86,17 @@ pub trait Trait:
 
 decl_storage! {
 	trait Store for Module<T: Trait> as Dispute {
-		/// The vote of the selected validators.
-		ValidatorVotes: map hasher(twox_64_concat) ValidatorIndex
-			=> Option<bool>;
+		/// The set of validators in favor of a particular block.
+		VotePro: map hasher(twox_64_concat) Hash
+			=> Vec<ValidatorId>;
 
-		/// The commitments of candidates pending availability, by ParaId.
-		PendingAvailabilityCommitments: map hasher(twox_64_concat) ParaId
+        /// The set of validators against a particular block.
+        VoteCon: map hasher(twox_64_concat) Hash
+			=> Vec<ValidatorId>;
+
+		/// The commitments of candidates pending availability, by `ParaId`.
+		Commitments: map hasher(twox_64_concat) ParaId
 			=> Option<CandidateCommitments>;
-
-		/// The current validators, by their parachain session keys.
-		Validators get(fn validators) config(validators): Vec<ValidatorId>;
-
-		/// The current session index.
-		CurrentSessionIndex get(fn session_index): SessionIndex;
-	}
-}
-
-// Errors inform users that something went wrong.
-decl_error! {
-	pub enum Error for Module<T: Trait> {
-		/// Error Y.
-		Y,
-		/// Error X.
-		X,
 	}
 }
 
@@ -115,6 +119,114 @@ decl_module! {
 	{
         fn deposit_event() = default;
 
+
+        /// Execute once a candidate becomes available.
+        ///
+        /// From this point on the period for secondary approval checks
+        /// for the para block starts.
+        /// Within this period disputes may occur.
+        #[weight = (1_000_000_000, DispatchClass::Mandatory)]
+        pub fn on_candidate_becomes_available(
+            origin,
+            para_block_hash: <Self as Trait>::Hash,
+
+        ) -> DispatchResult {
+            ensure_none!(origin)?;
+            ensure!(Self::local_chain_contains_para_block())?;
+
+
+            let validators = <T as Session>::Validator::validators()?;
+
+
+            Ok(())
+        }
+
+
+        /// One secondary validator deems the para-block in question
+        /// invalid, and starts a dispute.
+        #[weight = (1_000_000_000, DispatchClass::Mandatory)]
+        pub fn on_report(origin,
+            reporter: ValidatorId,
+            report: DisputeReport) -> DispatchResult {
+
+            // the relevant session
+            let session = report.session;
+
+
+            // TODO prevent double votes
+            // TODO punish attempted double votes?
+
+            let first = ValidatorCount::exists(); // TODO track if this is the first report for this para-block
+            if first {
+                // all validators that did already cast their vote,
+                // are already sorted into their voting bucket.
+                let validators = Self::original_validating_valdiators(session)?;
+                VotePro::mutate(move |mut set: Vec<ValidatorId>| { set.extend(validators); Ok(set) } )?;
+                VoteCon::mutate(move |mut set: Vec<ValidatorId>| { set.push(reporter); Ok(set) } )?;
+            
+                let additional = Self::escalate()?;
+                // TODO unionize / exclude duplicates
+                
+                let unioned_validators = unimplemented!();
+                
+                ValidatorCount::set(union_validators.len());
+            } else {
+                let all_validators = Self::validator_set().len();
+                let DisputeVotes { pro, cons } = Self::count_pro_and_cons_votes(block_hash);
+                let thresh = resolution_threshold(all_validators.len()) as u32;
+                let (pro, cons) = (pro >= thresh, cons >= thresh);
+        
+                if pro && cons {
+                    unreachable!("The number of validators was correctly assessed. qed");
+                } else if !pro && !cons {
+                    // nothing todo just yet
+                    return Ok(())
+                }
+
+                assert!(pro ^ con, "Pro and con can not have super majority at the same time. qed");
+
+                let offenders = if cons {
+                    // only revert the block here, the decision is already made
+                    // TODO how do we revert a block (?)
+                    // TODO transplant to all active heads
+                } else {
+                    // do not revert the block, everything is fine, just slash the
+                    // reporters
+                };
+
+            }
+
+            Ok(())
+        }
+
+        /// Whenever a secondary approval is passed, this keeps track of it.
+        #[weight = (1_000_000_000, DispatchClass::Mandatory)]
+        pub fn on_secondary_approval_vote_cast(
+            origin,
+            disputed_para_block: Hash,
+        ) -> DispatchResult {
+            ensure_none!(origin)?;
+
+            VotePro::mutate(disputed_para_block, |v| { v.push(validator); Ok(v) } );
+
+            Ok(())
+        }
+
+
+        /// Triggers the slashing at the end of $period or session change.
+        // TODO clarify when this is happening exactly.
+        #[weight = (1_000_000_000, DispatchClass::Mandatory)]
+        pub fn slash_defeated(session: SessionIndex) -> DispatchResult {
+            // TODO use the information in the storage in order to
+            // TODO find the correct subset of valdiators to slash
+
+            let offence = Offence::new(); // FIXME 
+            // TODO reporters are empty
+            // TODO eval if we should populate it with all validators on the winning side?
+            let reporters = Vec::new();
+            Offences::report_offence(offence, offenders)?;
+        }
+
 	}
 }
 
@@ -133,37 +245,45 @@ impl<T: Trait> Module<T> {
 	) {
 		// unlike most drain methods, drained elements are not cleared on `Drop` of the iterator
 		// and require consumption.
-		for _ in <ValidatorVotes>::drain() { }
+        for _ in <VotePro>::drain() { }
+        for _ in <VoteCon>::drain() { }
     }
-    
+
+    /// Query all validators, since there was an initial dispute
+    ///
+    /// Returns a set of additional validators, which are asked to verify.
+    fn escalate() -> Vec<ValidatorId> {
+        // TODO collect **all** validators available
+        vec![]
+    }
 
     fn validators_pro() -> Vec<ValidatorId> {
-        vec![] // TODO
+        VotePro::<T>::get()
     }
 
-    fn validators_cons() -> Vec<ValidatorId> {
-        vec![] // TODO
+    fn validators_con() -> Vec<ValidatorId> {
+        VoteCon::<T>::get()
     }
 
-    /// The set of validators which originally validated that block.
+    /// The set of validators which were responsible in the session
+    /// the block was backed in.
     fn original_validating_valdiators(session: SessionIndex) -> Vec<ValidatorId> {
-        unimplemented!("");
+        Session::validators(session)
     }
 
     /// Check all of the known votes in storage for that block.
     /// Returns `true`
     fn count_pro_and_cons_votes(block: <T as frame_system::Trait>::Hash) -> DisputeVotes {
-        // TODO which votes to we count here?
-        // approval?
-        // backing?
-        // both?
-        DisputeVotes::default() // TODO
+        DisputeVotes {
+            pro: validators_pro().len(),
+            con: validators_con().len(),
+        }
     }
 
 
     /// Transplant a vote onto all other forks.
     fn transplant_to(resolution: Resolution, active_heads: Vec<<T as frame_system::Trait>::Hash>) {
-
+        unimplemented!("transplantation is not yet impl'd")
     }
 
     /// Extend the set of blocks to never sync again.
@@ -177,41 +297,21 @@ impl<T: Trait> Module<T> {
         
         let events: Vec<EventRecord<<T as frame_system::Trait>::Event, <T as frame_system::Trait>::Hash>> = Events::<T>::events();
 
-        // encoded
-        let data: Vec<u8> = ExtrinsicData::<T>::extrinsic_data(77u32);
-
-        let session = SessionIndex::default();// TODO obtain the relevant session index
-        let offenders = Vec::<OffenceDetails<T::AccountId, pallet_session::historical::IdentificationTuple<T>>>::new();
-        let slash_fraction = Vec::<Perbill>::new();
-        let weight = <T as pallet_staking::Trait>::OnOffenceHandler::on_offence(
-            &offenders,
-            &slash_fraction,
-            &slash_session,
-        ).expect("TODO validate the assumption that this should always work");
-
         weight
 	}
 
-
+    /// Local disputes can only be processes iff the para-block
+    /// is part of the current relay-chain.
     pub fn local_chain_contains_para_block() -> bool {
-
+        // TODO how to obtain this information?
+        unimplemented!("FIXME XXX")
     }
 
 
-    /// Process a local dispute.
-    pub(crate) fn process_local_dispute(
-        block_hash: <T as frame_system::Trait>::BlockNumber,
-    ) -> DisputedBlock {
-        // TODO 
-        // ensure_none!(origin);
-        ensure!(Self::local_chain_contains_para_block());
-
-
-    }
 
     /// block the block number in question
     ///
-    pub(crate) fn process_concluded(
+    pub(crate) fn process_concluded_dispute(
         block_number: <T as frame_system::Trait>::BlockNumber,
         block_hash: <T as frame_system::Trait>::Hash,
         session: SessionIndex) -> Result<(), DispatchError>
@@ -219,19 +319,6 @@ impl<T: Trait> Module<T> {
         // TODO ensure!(..), bounds unclear
 
         // number of _all_ validators
-        let all_validators = 10u32; // TODO disamibiguate
-        let DisputeVotes { pro, cons } = Self::count_pro_and_cons_votes(block_hash);
-        let thresh = resolution_threshold(all_validators.len()) as u32;
-        let (pro, cons) = (pro >= thresh, cons >= thresh);
-
-        if !(pro ^ cons) {
-            return Err(Error::X)
-        } else if pro && cons {
-            unreachable!("The number of validators was correctly assessed. qed");
-        } else if !pro && !cons {
-            // nothing todo just yet
-            return Ok(())
-        }
 
         let resolution = if cons {
             Self::extend_blacklist(&[block_hash]);
@@ -249,24 +336,23 @@ impl<T: Trait> Module<T> {
                 was_truely_wrong: false,
             }
         } else {
-            return Err(Error::Y)
+            return;
         };
 
-
-        let active_heads = vec![]; // TODO extract from the runtime, is this correct? 
+        // TODO extract from the runtime, is this correct? 
+        let active_heads = vec![];
 
         // 
         Self::transplant_to(resolution, active_heads);
 
-        // the original validators screwed up too, so slashing is in order
-        let original_offenders = Self::original_validating_valdiators(session);
+        // TODO slash
 
         Ok(())
     }
 
 
     /// Process an unconcluded 
-    fn process_unconcluded() {
+    fn process_unconcluded_dispute() {
         unimplemented!("XXX");
     }
 
@@ -280,7 +366,8 @@ impl<T: Trait> Module<T> {
 
 #[derive(Encode, Decode)]
 struct Resolution {
-    hash: Hash, // hash of the storage root / state root this dispute was about
+    hash: Hash, // hash of para-block this dispute was about
+    revert_to: Hash, // hash of the relay chain block to revert back to
     was_truely_wrong: bool, // if the originally tagged as bad, was actually bad
     to_punish: Vec<ValidatorId>, // the validator party to slash
 }
@@ -293,9 +380,7 @@ pub(crate) struct DisputeVotes {
 
 /// Calculate the majority requred to sway in one way or another
 const fn resolution_threshold(n_validators: usize) -> usize {
-	let mut threshold = (n_validators * 2) / 3;
-	threshold += (n_validators * 2) % 3;
-	threshold
+	n_validators - (n_validators * 1) / 3
 }
 
 #[cfg(test)]

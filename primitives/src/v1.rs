@@ -377,14 +377,19 @@ impl<H> BackedCandidate<H> {
 }
 
 
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+struct DisputeReport {
+	/// The para-block in question.
+	session_index: SessionIndex,
+	/// The para-block in question.
+	hash: Hash,
+};
+
 /// A block that is actively being disputed.
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
 pub struct DisputedBlock {
-	/// The block in question.
+	/// The para-block in question.
 	pub hash: Hash,
-	/// The validator which signed off on the disputed block.
-	/// Required for potential slashing.
-	pub validator: ValidatorSignature,
 }
 
 
