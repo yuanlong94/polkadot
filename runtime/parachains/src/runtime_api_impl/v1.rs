@@ -299,3 +299,18 @@ where
 		validator_index.and_then(|i| authorities.get(i).cloned())
 	}).collect()
 }
+
+pub fn fetch_hrmp_ingress_queues<T: crate::router::Trait>(
+	recipient: ParaId,
+) -> sp_std::collections::btree_map::BTreeMap<
+	ParaId,
+	Vec<primitives::v1::InboundHrmpMessage<T::BlockNumber>>,
+> {
+	<crate::router::Module<T>>::fetch_hrmp_ingress_queues(recipient)
+}
+
+pub fn fetch_dmq<T: crate::router::Trait>(
+	recipient: ParaId,
+) -> Vec<primitives::v1::InboundDownwardMessage<T::BlockNumber>> {
+	<crate::router::Module<T>>::fetch_dmq(recipient)
+}

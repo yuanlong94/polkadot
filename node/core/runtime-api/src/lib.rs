@@ -123,6 +123,8 @@ fn make_runtime_api_request<Client>(
 			query!(candidate_pending_availability(para), sender),
 		Request::CandidateEvents(sender) => query!(candidate_events(), sender),
 		Request::ValidatorDiscovery(ids, sender) => query!(validator_discovery(ids), sender),
+		Request::FetchHrmpIngressQueues(id, sender) => query!(fetch_hrmp_ingress_queues(id), sender),
+		Request::FetchDmq(id, sender) => query!(fetch_dmq(id), sender),
 	}
 }
 
@@ -278,6 +280,23 @@ mod tests {
 
 			fn validator_discovery(ids: Vec<ValidatorId>) -> Vec<Option<AuthorityDiscoveryId>> {
 				vec![None; ids.len()]
+			}
+
+			// TODO: Cover these with tests
+
+			fn fetch_hrmp_ingress_queues(
+				_recipient: ParaId,
+			) -> std::collections::btree_map::BTreeMap<
+				ParaId,
+				Vec<polkadot_primitives::v1::InboundHrmpMessage>,
+			> {
+				std::collections::btree_map::BTreeMap::new()
+			}
+
+			fn fetch_dmq(
+				_recipient: ParaId,
+			) -> Vec<polkadot_primitives::v1::InboundDownwardMessage> {
+				Vec::new()
 			}
 		}
 	}

@@ -659,6 +659,21 @@ sp_api::impl_runtime_apis! {
 		fn validator_discovery(validators: Vec<ValidatorId>) -> Vec<Option<AuthorityDiscoveryId>> {
 			runtime_impl::validator_discovery::<Runtime>(validators)
 		}
+
+		fn fetch_hrmp_ingress_queues(
+			recipient: ParaId,
+		) -> sp_std::collections::btree_map::BTreeMap<
+			ParaId,
+			Vec<primitives::v1::InboundHrmpMessage<BlockNumber>>,
+		> {
+			runtime_impl::fetch_hrmp_ingress_queues::<Runtime>(recipient)
+		}
+
+		fn fetch_dmq(
+			recipient: ParaId,
+		) -> Vec<primitives::v1::InboundDownwardMessage<BlockNumber>> {
+			runtime_impl::fetch_dmq::<Runtime>(recipient)
+		}
 	}
 
 	impl fg_primitives::GrandpaApi<Block> for Runtime {

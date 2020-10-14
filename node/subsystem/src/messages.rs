@@ -429,6 +429,13 @@ pub enum RuntimeApiRequest {
 	///
 	/// Returns `None` for validators not found in the current session.
 	ValidatorDiscovery(Vec<ValidatorId>, RuntimeApiSender<Vec<Option<AuthorityDiscoveryId>>>),
+	/// TODO:
+	FetchHrmpIngressQueues(ParaId, RuntimeApiSender<std::collections::btree_map::BTreeMap<
+		ParaId,
+		Vec<polkadot_primitives::v1::InboundHrmpMessage<BlockNumber>>,
+	>>),
+	/// TODO:
+	FetchDmq(ParaId, RuntimeApiSender<Vec<polkadot_primitives::v1::InboundDownwardMessage<BlockNumber>>>),
 }
 
 /// A message to the Runtime API subsystem.

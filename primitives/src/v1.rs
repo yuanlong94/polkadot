@@ -730,6 +730,19 @@ sp_api::decl_runtime_apis! {
 		/// We assume that every validator runs authority discovery,
 		/// which would allow us to establish point-to-point connection to given validators.
 		fn validator_discovery(validators: Vec<ValidatorId>) -> Vec<Option<AuthorityDiscoveryId>>;
+
+		/// TODO:
+		fn fetch_hrmp_ingress_queues(
+			recipient: Id,
+		) -> sp_std::collections::btree_map::BTreeMap<
+			Id,
+			Vec<crate::v1::InboundHrmpMessage<N>>,
+		>;
+
+		/// TODO:
+		fn fetch_dmq(
+			recipient: Id,
+		) -> Vec<crate::v1::InboundDownwardMessage<N>>;
 	}
 }
 

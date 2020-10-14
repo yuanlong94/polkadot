@@ -23,7 +23,7 @@ use primitives::v1::{
 	SessionIndex,
 };
 use sp_runtime::traits::{BlakeTwo256, Hash as HashT};
-use sp_std::collections::btree_set::BTreeSet;
+use sp_std::collections::{btree_set::BTreeSet, btree_map::BTreeMap};
 use sp_std::mem;
 use sp_std::prelude::*;
 
@@ -426,5 +426,23 @@ impl<T: Trait> Module<T> {
 		}
 
 		mqc_heads
+	}
+
+	/// Fetches messages across all channels addressed to the given para.
+	///
+	/// Returns a mapping from sender paras to the queue of messages sent by that para. The most
+	/// recent messages are the latest in the vector.
+	///
+	/// Meant to be used for the runtime API implementation.
+	pub(crate) fn fetch_hrmp_ingress_queues(
+		recipient: ParaId,
+	) -> BTreeMap<ParaId, Vec<InboundHrmpMessage<T::BlockNumber>>> {
+		let mut result = BTreeMap::new();
+		for sender in <Self as Store>::HrmpIngressChannelsIndex::get(&recipient) {
+			let message_queue =
+				<Self as Store>::HrmpChannelContents::get(&HrmpChannelId { sender, recipient });
+			result.insert(sender, message_queue);
+		}
+		result
 	}
 }
