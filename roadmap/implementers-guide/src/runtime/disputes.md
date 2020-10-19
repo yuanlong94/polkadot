@@ -48,9 +48,12 @@ Approval votes could be recorded on-chain quickly because they represent a major
 Assignment notices should be recorded on-chain only when relevant.  Any sent too early are retained but ignore until relevant by our off-chain assignment system.  Assignments are ignored completely by the dispute system because any dispute immediately escalates into all validators checking, but disputes count existing approval votes of course.
 
 
-## Local Disputes
+
+## Scope
 
 There is little overlap between the approval system and the disputes systems since disputes cares only that two validators disagree.  We do however require that disputes count validity votes from elsewhere, both the backing votes and the approval votes.  
+
+## Local Disputes
 
 We could approve, and even finalize, a relay chain block which then later disputes due to claims of some parachain being invalid.
 
@@ -68,6 +71,13 @@ Disputes may occur against blocks that have happened in the session prior to the
 
 After concluding with enough validtors voting, the dispute will remain open for some time in order to collect further evidence of misbehaving validators, and then issue a signal in the header-chain that this fork should be abandoned along with the hash of the last ancestor before inclusion, which the chain should be reverted to, along with information about the invalid block that should be used to blacklist it from being included.
 
+
+## Threat Model
+
+* A remote validator is taken over by a malicious party and desires to be slashed.
+* Network bipartition can lead to not reach the required quorum to conclude a dispute.
+
+
 ## Remote Disputes
 
 
@@ -84,10 +94,9 @@ graph LR;
     NM-->UV[Start Unavailability Vote]
 ```
 
-
 ```mermaid
 graph LR;
-    UV[Unavailability Vote Concluded]-->VT[Vote timed out w/o Resolution]
+    UV[Unavailability Vote Concluded]-->VT[Timed out w/o Resolution]
     UV-->SP[2/3 pro Unavailablity]
     UV-->SC[2/3 con Unavailablity]
     SP-->SM[Slash Minority]
@@ -104,29 +113,75 @@ graph LR;
     S[Slash]-->T[Transplant slash to all Active Heads]
 ```
 
+On dispute detection, the full block that is disputed is gossiped to all peers.
+
+Votes in favour of block validity always includes the primary votes from the `Backing` stage.
+
+Votes aginst the block validity always include the initial challenger from the `Backing` stage iff any.
+
+Session change implies a change of session keys. Hence at least two validator sets must be kept - the set of validators in the current session and the ones in the previous session.
+The timeouts must be set accordingly to guarantee that two sessions are sufficient, and timeout actions are not triggered in a 3rd session.
+An era change implies a session change, since the nominators change.
+
 TODO:
 * decided and describe **era** change during timeouts
 * decided and describe **session** change during timeouts
-
-Offchain
+* who can dispute, validators of the current session? Or also validators of the previous session?
 
 When a dispute has occurred on another fork, we need to transplant that dispute to every other fork. This poses some major challenges.
 
-There are two types of remote disputes. The first is a remote roll-up of a concluded dispute. These are simply all attestations for the block, those against it, and the result of all (secondary) approval checks. A concluded remote dispute can be resolved in a single transaction as it is an open-and-shut case of a quorum of validators disagreeing with another.
+There are two types of remote disputes. **Concluded** and **Unconcluded**.
 
-The second type of remote dispute is the unconcluded dispute. An unconcluded remote dispute is started by any validator, using these things:
+The first is a remote roll-up of a **concluded dispute**. These are simply all attestations for the block, those against it, and the result of all (secondary) approval checks. A concluded remote dispute can be resolved in a single transaction as it is an open-and-shut case of a quorum of validators disagreeing with another.
 
-- A candidate
-- The session that the candidate has appeared in.
-- Backing for that candidate
-- The validation code necessary for validation of the candidate.
-  > TODO: optimize by excluding in case where code appears in `Paras::CurrentCode` of this fork of relay-chain
-- Secondary checks already done on that candidate, containing one or more disputes by validators. None of the disputes are required to have appeared on other chains.
+The second type of remote dispute is the **unconcluded dispute**. An unconcluded remote dispute is started by any validator, using these things:
+
+
+```rust
+// TODO or better UnconcludedDisputeNotification
+struct UnconcludedDisputeGossip {
+  /// Candidate information (transactions, externalities (such as inherents etc.))
+  candidate: Candidate, // TODO `ValidationData` or `Block`?
+  /// Session of the candidates appearance
+  session: SessionIndex, // TODO SessionIndex oder SessionId (the key) ?
+  /// Backing for that candidate.
+  backing: Bitfield,
+  /// Validation code for the relay chain, excluding in case where code appears in `Paras::CurrentCode` of this fork of relay-chain.
+  // TODO current is relative, and the session might change, so the option is very likely pointless.
+  validation_code: Option<ValidationCode>,
+  /// Set of secondary checks that already completed. There is no requirement on which chain the validation has to have appeared.
+  secondary_checks: Vec<(AuthorityId, ValidityAttestation<Signature>)> /// FIXME does thes need to be a map? Do we need the `AuthorityId` key?
+}
+
   > TODO: validator-dispute could be instead replaced by a fisherman w/ bond
 
 When beginning a remote dispute, at least one escalation by a validator is required, but this validator may be malicious and desires to be slashed. There is no guarantee that the para is registered on this fork of the relay chain or that the para was considered available on any fork of the relay chain.
 
+The first step is the escalation, to notify peers of the unconcluded gossip.
+
 So the first step is to have the remote dispute proceed through an availability process similar to the one in the [Inclusion Module](inclusion.md), but without worrying about core assignments or compactness in bitfields.
+
+## TBC
+
+## Storage
+
+```rust
+struct DisputeAvailabilityBitfield {
+  validators: BitVec, // one bit per validator
+  previous_validators: BitVec, // one bit per validator in the previous session
+  submitted_at: BlockNumber, // for accounting, as meaning of bits may change over time.
+}
+```
+
+## Storage Layout
+
+TBD
+
+## Session Change
+
+TBD
+
+## Continue...
 
 We assume that remote disputes are with respect to the same validator set as on the current fork, as BABE and GRANDPA assure that forks are never long enough to diverge in validator set.
 > TODO: this is at least directionally correct. handling disputes on other validator sets seems useless anyway as they wouldn't be bonded.
