@@ -134,13 +134,10 @@ decl_module! {
             ensure_none!(origin)?;
             ensure!(Self::local_chain_contains_para_block())?;
 
-
             let validators = <T as Session>::Validator::validators()?;
-
 
             Ok(())
         }
-
 
         /// One secondary validator deems the para-block in question
         /// invalid, and starts a dispute.
@@ -151,7 +148,6 @@ decl_module! {
 
             // the relevant session
             let session = report.session;
-
 
             // TODO prevent double votes
             // TODO punish attempted double votes?
@@ -257,10 +253,12 @@ impl<T: Trait> Module<T> {
         vec![]
     }
 
+    /// Obtain the stored validators that support the block validity claim.
     fn validators_pro() -> Vec<ValidatorId> {
         VotePro::<T>::get()
     }
 
+    /// Obtain the stored validators that are challenging the block validity.
     fn validators_con() -> Vec<ValidatorId> {
         VoteCon::<T>::get()
     }
@@ -272,14 +270,12 @@ impl<T: Trait> Module<T> {
     }
 
     /// Check all of the known votes in storage for that block.
-    /// Returns `true`
     fn count_pro_and_cons_votes(block: <T as frame_system::Trait>::Hash) -> DisputeVotes {
         DisputeVotes {
             pro: validators_pro().len(),
             con: validators_con().len(),
         }
     }
-
 
     /// Transplant a vote onto all other forks.
     fn transplant_to(resolution: Resolution, active_heads: Vec<<T as frame_system::Trait>::Hash>) {
@@ -297,14 +293,15 @@ impl<T: Trait> Module<T> {
         
         let events: Vec<EventRecord<<T as frame_system::Trait>::Event, <T as frame_system::Trait>::Hash>> = Events::<T>::events();
 
+        // TODO what to do with the events? this is duplicate information.
+
         weight
 	}
 
     /// Local disputes can only be processes iff the para-block
     /// is part of the current relay-chain.
     pub fn local_chain_contains_para_block() -> bool {
-        // TODO how to obtain this information?
-        unimplemented!("FIXME XXX")
+        unimplemented!("How to achieve the equiv of `HeaderBackend<Block>::number(&client)` from the runtime?")
     }
 
 
