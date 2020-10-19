@@ -1,5 +1,7 @@
 # Disputes Module
 
+## Context
+
 After a backed candidate is made available, it is included and proceeds into an acceptance period during which validators are randomly selected to do (secondary) approval checks of the parablock. Any reports disputing the validity of the candidate will cause escalation, where even more validators are requested to check the block, and so on, until either the parablock is determined to be invalid or valid. Those on the wrong side of the dispute are slashed and, if the parablock is deemed invalid, the relay chain is rolled back to a point before that block was included.
 
 However, this isn't the end of the story. We are working in a forkful blockchain environment, which carries three important considerations:
@@ -17,9 +19,11 @@ We account for these requirements by having the validity module handle two kinds
 1. Local disputes: those contesting the validity of the current fork by disputing a parablock included within it.
 1. Remote disputes: a dispute that has partially or fully resolved on another fork which is transplanted to the local fork for completion and eventual slashing.
 
-## Approval
+### Approval
 
-We begin approval checks upon any candidate immediately once it becomes available.  
+
+
+We begin approval checks upon any candidate immediately once it becomes available.
 
 Assigning approval checks involve VRF secret keys held by every validator, making it primarily an off-chain process.  All assignment criteria require specific data called "stories" about the relay chain block in which the candidate assigned by that criteria became available.  Among these criteria, the BABE VRF output provides the story for two, and the other's story consists of the candidate's block hash plus external knowledge that a relay chain equivocation exists with a conflicting candidate. 
 
@@ -66,6 +70,45 @@ After concluding with enough validtors voting, the dispute will remain open for 
 
 ## Remote Disputes
 
+
+```mermaid
+graph LR;
+    A[Availability]-->D[Dispute]
+    A-->S[Do VRF based secondary checks]
+    S-->D
+    D-->SP[2/3 voted for invalidity]
+    D-->SC[2/3 voted against invalidity]
+    SP-->SM[Slash the opposing minority]
+    SC-->SM
+    D-->NM[Failed to gather majority]
+    NM-->UV[Start Unavailability Vote]
+```
+
+
+```mermaid
+graph LR;
+    UV[Unavailability Vote Concluded]-->VT[Vote timed out w/o Resolution]
+    UV-->SP[2/3 pro Unavailablity]
+    UV-->SC[2/3 con Unavailablity]
+    SP-->SM[Slash Minority]
+    SC-->SM
+    VT-->SA[Slash All Validators]
+```
+
+
+Slashing must happen off-chain, since there is no guarantee that forks of the current selected head, will receive any more
+blocks. As such that block must be scheduled in the transaction pool (?).
+
+```mermaid
+graph LR;
+    S[Slash]-->T[Transplant slash to all Active Heads]
+```
+
+TODO:
+* decided and describe **era** change during timeouts
+* decided and describe **session** change during timeouts
+
+Offchain
 
 When a dispute has occurred on another fork, we need to transplant that dispute to every other fork. This poses some major challenges.
 
