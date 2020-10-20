@@ -78,8 +78,20 @@ After concluding with enough validtors voting, the dispute will remain open for 
 * Network bipartition can lead to not reach the required quorum to conclude a dispute.
 
 
-## Remote Disputes
+## Assumptions
 
+* An adversary cannot censor validators from seeing any particular forks indefinitely.
+* Remote disputes are with respect to the same validator set as on the current fork, as BABE and GRANDPA assure that forks are never long enough to diverge in validator set.
+  > TODO: this is at least directionally correct. handling disputes on other validator sets seems useless anyway as they wouldn't be bonded.
+* 
+
+## Impl. Notes / Constraints
+
+* Transplanting slashing transactions must happen off-chain, since there is no guarantee that the fork will receive any more blocks.
+* Supermajority is given when `x >= ($votes - $votes/3)` which guarantees the correct rounding behaviour also denoted as `>2/3` (`2f + 1`)
+
+
+## Remote Disputes
 
 ```mermaid
 graph LR;
@@ -152,6 +164,7 @@ struct UnconcludedDisputeGossip {
   /// Set of secondary checks that already completed. There is no requirement on which chain the validation has to have appeared.
   secondary_checks: Vec<(AuthorityId, ValidityAttestation<Signature>)> /// FIXME does thes need to be a map? Do we need the `AuthorityId` key?
 }
+```
 
   > TODO: validator-dispute could be instead replaced by a fisherman w/ bond
 
@@ -161,7 +174,59 @@ The first step is the escalation, to notify peers of the unconcluded gossip.
 
 So the first step is to have the remote dispute proceed through an availability process similar to the one in the [Inclusion Module](inclusion.md), but without worrying about core assignments or compactness in bitfields.
 
-## TBC
+## Disputing an Unavailable Candidate
+
+As with local disputes, the validators of the session the candidate was included on another chain are responsible for resolving the dispute and determining availability of the candidate.
+
+If the candidate was not made available on another fork of the relay chain (as in it does not exist), the availability process will time out and the disputing validator will be slashed on this fork. 
+
+The escalation (== initial notification of wrong-doing) used by the validator(s) can be replayed onto other forks to lead the wrongly-escalating validator(s) to be slashed on all other forks as well.
+
+## Resolving state of availability
+
+The availbility or unavailability.
+> TODO: set the availability timeout for this accordingly - unlike in the inclusion pipeline we are slashing for unavailability here!
+
+If the availability process passes, the remote dispute is ready to be included on this chain. As with the local dispute, validators self-select based on a VRF.
+> TODO: Given that a remote dispute is likely to be replayed across multiple forks, it is important to choose a VRF in a way that all forks processing the remote dispute will have the same one. Choosing the VRF is important as it should not allow an adversary to have control over who will be selected as a secondary approval checker.
+
+After enough validator self-select, under the same escalation rules as for local disputes, the Remote dispute will conclude, slashing all those on the wrong side of the dispute. After concluding, the remote dispute remains open for a set amount of blocks to accept any further proof of additional validators being on the wrong side.
+
+Available disputed candidate:
+
+```mermaid
+sequenceDiagram
+    Alice ->> Bob: DisputeNotification
+    Alice ->> Charly: DisputeNotification
+    Note right of Alice: Same approach<br>for Bob and Charlie
+    Bob -->> ...: Check Availability
+    ... -->> Bob: Block was available with supermajority
+```
+
+With an unavailable block
+
+```mermaid
+sequenceDiagram
+    Alice ->> Bob: DisputeNotification
+    Alice ->> Charlie: DisputeNotification
+    Note right of Alice: Same approach<br>for Bob and Charlie
+    Bob -->> ...: Check Availability
+    ... -->> Bob: Block is unavailabe with supermajority
+    Bob -->> ...: Slash Alice + Transplant
+```
+
+Timeout during supermajority
+
+```mermaid
+sequenceDiagram
+    Alice ->> Bob: DisputeNotification
+    Alice ->> Charlie: DisputeNotification
+    Note right of Alice: Same approach<br>for Bob and Charlie
+    Bob -->> ...: Check Availability
+    ... -->> Bob: Timeout, did not reach a supermajority
+    ... -->> Slash Everybody
+```
+
 
 ## Storage
 
@@ -169,7 +234,7 @@ So the first step is to have the remote dispute proceed through an availability 
 struct DisputeAvailabilityBitfield {
   validators: BitVec, // one bit per validator
   previous_validators: BitVec, // one bit per validator in the previous session
-  submitted_at: BlockNumber, // for accounting, as meaning of bits may change over time.
+  submitted_at: BlockNumber, // a reference block to reference the right set of validators at the time of submission
 }
 ```
 
@@ -180,26 +245,20 @@ TBD
 ## Session Change
 
 TBD
+ 
 
-## Continue...
+## Routines
 
-We assume that remote disputes are with respect to the same validator set as on the current fork, as BABE and GRANDPA assure that forks are never long enough to diverge in validator set.
-> TODO: this is at least directionally correct. handling disputes on other validator sets seems useless anyway as they wouldn't be bonded.
-
-As with local disputes, the validators of the session the candidate was included on another chain are responsible for resolving the dispute and determining availability of the candidate.
-
-If the candidate was not made available on another fork of the relay chain, the availability process will time out and the disputing validator will be slashed on this fork. The escalation used by the validator(s) can be replayed onto other forks to lead the wrongly-escalating validator(s) to be slashed on all other forks as well. We assume that the adversary cannot censor validators from seeing any particular forks indefinitely
-
-> TODO: set the availability timeout for this accordingly - unlike in the inclusion pipeline we are slashing for unavailability here!
-
-If the availability process passes, the remote dispute is ready to be included on this chain. As with the local dispute, validators self-select based on a VRF. Given that a remote dispute is likely to be replayed across multiple forks, it is important to choose a VRF in a way that all forks processing the remote dispute will have the same one. Choosing the VRF is important as it should not allow an adversary to have control over who will be selected as a secondary approval checker.
-
-After enough validator self-select, under the same escalation rules as for local disputes, the Remote dispute will conclude, slashing all those on the wrong side of the dispute. After concluding, the remote dispute remains open for a set amount of blocks to accept any further proof of additional validators being on the wrong side.
+TBD
 
 ## Slashing and Incentivization
 
-The goal of the dispute is to garner a `>2/3` (`2f + 1`) supermajority either in favor of or against the candidate.
+The goal of the dispute is to garner a  either in favor of or against the candidate.
 
 For remote disputes, it is possible that the parablock disputed has never actually passed any availability process on any chain. In this case, validators will not be able to obtain the PoV of the parablock and there will be relatively few votes. We want to disincentivize voters claiming validity of the block from preventing it from becoming available, so we charge them a small distraction fee for wasting the others' time if the dispute does not garner a 2/3+ supermajority on either side. This fee can take the form of a small slash or a reduction in rewards.
 
 When a supermajority is achieved for the dispute in either the valid or invalid direction, we will penalize non-voters either by issuing a small slash or reducing their rewards. We prevent censorship of the remaining validators by leaving the dispute open for some blocks after resolution in order to accept late votes.
+
+
+## Open Questions
+  - what happens with open disputes on session / era change?
