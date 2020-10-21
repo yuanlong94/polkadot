@@ -176,6 +176,8 @@ So the first step is to have the remote dispute proceed through an availability 
 
 ## Disputing an Unavailable Candidate
 
+The case of a mailicious validator is covered as follows:
+
 As with local disputes, the validators of the session the candidate was included on another chain are responsible for resolving the dispute and determining availability of the candidate.
 
 If the candidate was not made available on another fork of the relay chain (as in it does not exist), the availability process will time out and the disputing validator will be slashed on this fork. 
