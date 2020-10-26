@@ -16,6 +16,7 @@ parity-scale-codec = "1.3.4"
 sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
 sp-staking = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "seun-babe-manual-seal" }
 polkadot-subsystem = { package = "polkadot-node-subsystem", path = "../../subsystem" }
+polkadot-node-subsystem-util = { path = "../../subsystem-util" }
 polkadot-node-network-protocol = { path = "../../network/protocol" }
 arrayvec = "0.5.1"
 indexmap = "1.4.0"
@@ -26,3 +27,6 @@ polkadot-node-subsystem-test-helpers = { path = "../../subsystem-test-helpers" }
 assert_matches = "1.3.0"
 sp-keyring = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sp-application-crypto = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sp-keystore = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sc-keystore = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }

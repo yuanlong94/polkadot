@@ -16,4 +16,8 @@ polkadot-node-subsystem-util = { path = "../../subsystem-util" }
 [dev-dependencies]
 lazy_static = "1.4"
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sp-application-crypto = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sp-keystore = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
+sc-keystore = { git = "https://github.com/paritytech/substrate", branch = "seun-babe-manual-seal" }
 futures-timer = "3.0.2"
+tempfile = "3.1.0"
